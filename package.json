@@ -1,0 +1,19 @@
+{
+  "name": "theme-extractor",
+  "version": "1.0.0",
+  "description": "extract specify css from a directory",
+  "main": "index.js",
+  "scripts": {
+    "test": ""
+  },
+  "keywords": [
+    "css",
+    "extract"
+  ],
+  "author": "xlf-summer@qq.com",
+  "license": "ISC",
+  "dependencies": {
+    "bluebird": "^3.5.1",
+    "css": "^2.2.1"
+  }
+}
