@@ -4,7 +4,8 @@
   "description": "extract specify css from a directory",
   "main": "index.js",
   "scripts": {
-    "test": ""
+    "test": "",
+    "start": "node index.js"
   },
   "keywords": [
     "css",
