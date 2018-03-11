@@ -1,11 +1,17 @@
-/*extract from e:\项目工程\Node\cssExtractor\test\inner\inner.css*/
+/*extract from inner.css*/
 
 div {
-  color: #333;
+  background-color: #444;
 }
 
-/*extract from e:\项目工程\Node\cssExtractor\test\style.css*/
+/*extract from innerDir.css\article.css*/
+
+.article .title {
+  background-color: #444;
+}
+
+/*extract from style.css*/
 
 div {
-  color: #333;
+  background-color: #444;
 }
