@@ -1,17 +1,11 @@
-/*extract from inner.css*/
+/* extract from inner.css */
 
 div {
-  background-color: #444;
+  color: #333
 }
 
-/*extract from innerDir.css\article.css*/
-
-.article .title {
-  background-color: #444;
-}
-
-/*extract from style.css*/
+/* extract from style.css */
 
 div {
-  background-color: #444;
+  color: #333
 }

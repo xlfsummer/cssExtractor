@@ -1,4 +1,4 @@
-let cssModule = require('css');
+let postcss = require('postcss');
 let path = require('path');
 let f = require('./lib/fs');
 
@@ -6,7 +6,9 @@ let f = require('./lib/fs');
  * @type {boolean}
 */
 let isUpdateSrc = false;
-let srcDirPath = "./test/project"
+let srcDirPath =
+	// "F:\\商城\\branch\\Codes\\controls\\pc";
+	"./test/project";
 let configPath = "./extract.config.css"
 let outputPath = "./test/extracted.css"
 
@@ -33,20 +35,28 @@ async function main(){
 		allExtractedRules = allExtractedRules.concat(extractedRules);
 	}
 
-	extractedContent = cssModule.stringify({
-		stylesheet: { rules: allExtractedRules }
-	})
+
+	if (allExtractedRules.length) {
+		allExtractedRules[0].raws.before = "";
+	}
+
+	extractedContent = postcss.root({
+		nodes: allExtractedRules,
+		raws: { after: "\n" }
+	}).toString();
 
 	await f.writeFile(outputPath, extractedContent);
 
 	return;
 
 	async function processFile(content, relativePath) {
-		let css = cssModule.parse(content);
-		let rules = css.stylesheet.rules;
+		let css = postcss.parse(content);
+
+		let rules = css.nodes;
 		let processedRules = [];
 		let extractedRules = [];
-	
+
+
 		for (let r of rules) {
 			switch (r.type) {
 				case "rule":
@@ -55,6 +65,7 @@ async function main(){
 					if (extractedRule) extractedRules.push(extractedRule);
 					break;
 				case "comment":
+				case "charset":
 					processedRules.push(r);
 					break;
 				default:
@@ -62,25 +73,32 @@ async function main(){
 			}
 		}
 
-		let processedCss = {
-			stylesheet: { rules: processedRules }
-		};
+
+		let processedCss = postcss.root({
+			nodes: processedRules,
+		});
 
 		if (extractedRules.length) {
-			extractedRules.unshift({
-				comment: "extract from " + relativePath,
-				type: "comment",
-			});
+			extractedRules.unshift(
+				postcss.comment({
+					text: "extract from " + relativePath,
+					raws: { before: "\n\n" }
+				})
+			);
 		}
 
-		let processedContent = cssModule.stringify(processedCss);
+
+
+		let processedContent =
+			// postcss.stringify(processedCss);
+			processedCss.toString();
 
 		return { processedContent, extractedRules };
 	}
-	
+
 	/**
-	 * 
-	 * @param {Rule} rule 
+	 *
+	 * @param {Rule} rule
 	 */
 	async function processRule(rule) {
 		let selectors = rule.selectors;
@@ -88,37 +106,29 @@ async function main(){
 		let processedDeclar = [];
 		let extractDeclar = [];
 
-		for (let d of rule.declarations) {
-			if (d.type == "declaration") {
-				// /** @type {string} */
-				// let property = d.property;
-		
-				// /** @type {string} */
-				// let value = d.value;
-
+		for (let d of rule.nodes) {
+			if (d.type == "decl") {
 				if (configRules.some(configRule => testDelaration(configRule, d))) {
 					extractDeclar.push(d)
 				} else {
 					processedDeclar.push(d)
 				}
 			} else {
+				debugger;
 				processedDeclar.push(d)
 			}
 		}
 
 		if (extractDeclar.length) {
-			extractedRule = {
-				selectors,
-				declarations: extractDeclar,
-				type: "rule"
-			};
+			extractedRule = rule.clone({
+				nodes: extractDeclar,
+				raws: { before: "\n\n", after: "\n", }
+			});
 		}
 
-		processedRule = {
-			selectors,
-			declarations: processedDeclar,
-			type: "rule"
-		};
+		processedRule = rule.clone({
+			nodes: processedDeclar,
+		});
 
 		return {processedRule, extractedRule};
 	}
@@ -126,16 +136,23 @@ async function main(){
 };
 
 function testDelaration(rule, declaration) {
-	let declarations = rule.declarations;
+	if (rule.type == "comment") {
+		return false;
+	}
+
+	let declarations = rule.nodes;
 	return declarations
-		.filter(d => d.type == "declaration")
-		.some(d => d.property == declaration.property && d.value == declaration.value);
+		.filter(d => d.type == "decl")
+		.some(d => d.prop == declaration.prop && d.value == declaration.value);
 }
 
 async function getConfigRules(path) {
+
 	let content = await f.readFile(path);
-	let cssObj = cssModule.parse(content);
-	return cssObj.stylesheet.rules;
+
+	let cssObj = postcss.parse(content);
+
+	return cssObj.nodes;
 }
 
 (async () => {
